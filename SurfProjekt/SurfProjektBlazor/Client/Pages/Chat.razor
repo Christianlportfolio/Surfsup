@@ -1,0 +1,105 @@
+﻿@page "/chat"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.AspNetCore.Identity;
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+@implements IAsyncDisposable
+
+<PageTitle>Index</PageTitle>
+
+<tbody>
+    @foreach (var item in identityUsers)
+    {
+        @if (item.UserName != userName)
+        {
+            <tr style="background-color:white">
+                <td>
+                    
+                    Anden bruger: @item.UserName
+                    
+
+                </td>
+            </tr>
+        }
+
+    }
+</tbody>
+<div style="margin-top:20px" class="form-group">
+    <label>
+        Bruger: @userName
+    </label>
+</div>
+<div class="form-group">
+    <label>
+        Besked:
+        <input @bind="messageInput" size="50" />
+    </label>
+</div>
+<button class="btn btn-primary" @onclick="Send" disabled="@(!IsConnected)">Send</button>
+
+<hr>
+
+<ul id="messagesList">
+    @foreach (var message in messages)
+    {
+        <li>@message</li>
+    }
+</ul>
+
+@code {
+    private List<IdentityUser>? identityUsers = new List<IdentityUser>();
+
+
+    private HubConnection? hubConnection;
+    private List<string> messages = new List<string>();
+    private string? userName;
+    private string? messageInput;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authenticationState.User;
+        userName = user.Identity.Name;
+
+        identityUsers = await httpClient.GetFromJsonAsync<List<IdentityUser>>("api/user/users");
+
+        if (user.Identity.IsAuthenticated)
+        {
+            hubConnection = new HubConnectionBuilder()
+          .WithUrl(Navigation.ToAbsoluteUri("/chathub"))
+          .Build();
+
+            hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+            {
+                var encodedMsg = $"{user}: {message}";
+                messages.Add(encodedMsg);
+                InvokeAsync(StateHasChanged);
+            });
+
+            await hubConnection.StartAsync();
+        }
+
+
+    }
+
+    private async Task Send()
+    {
+        if (hubConnection is not null)
+            {
+                await hubConnection.SendAsync("SendMessage", userName, messageInput);
+            }
+    }
+
+    public bool IsConnected =>
+        hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

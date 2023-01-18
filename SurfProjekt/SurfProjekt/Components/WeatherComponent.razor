@@ -1,0 +1,87 @@
+﻿@using Microsoft.AspNetCore.Components
+@page "/WeatherComponent"
+@inject HttpClient httpClient
+
+<PageTitle>Vejrudsigt</PageTitle>
+
+<h3>Vejrudsigt</h3>
+<input class="text" @bind=city />
+<button @onclick="GetWeather">Vis vejrudsigt</button>
+
+@if (weatherForecasts != null)
+{
+    <h4>@weatherForecasts[0].City</h4>
+
+    <table cellpadding="10px">
+        <tr>
+            <th>Tidspunkt</th>
+            <th>Temperatur</th>
+            <th>Beskrivelse</th>
+            <th>Vindhastighed</th>
+            <th>Vindretning</th>
+        </tr>
+        <tr>
+            <td>@DateTime.Now.ToString("dd. MMM")</td>
+        </tr>
+        @foreach (var weather in weatherForecasts)
+        {
+            @if (weather.Time.ToString("HH.mm") == "00.00")
+            {
+                <tr>
+                    <th>Tidspunkt</th>
+                    <th>Temperatur</th>
+                    <th>Beskrivelse</th>
+                    <th>Vindhastighed</th>
+                    <th>Vindretning</th>
+                </tr>
+                <tr>
+                    <td>@weather.Time.ToString("dd. MMM")</td>
+                </tr>
+            }
+            <tr>
+                <td>@weather.Time.ToString("HH.mm")</td>
+                <td>@Math.Round(weather.Temperature,1) °C</td>
+                <td>@weather.Description</td>
+                <td>@weather.WindSpeed m/s</td>
+                <td>@weather.WindDirection °</td>
+            </tr>
+        }
+    </table>
+
+}
+
+@code {
+    private List<Weather>? weatherForecasts;
+
+    private string city;
+
+    private string URL;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //weatherForecasts = new List<Weather>();
+        //weatherForecasts.Add(new Weather { WindDirection = 12, WindSpeed = 10, Temperature = 13, Description = "kdfkdjf", Time = DateTime.Now, City = "odense" });
+        //weatherForecasts.Add(new Weather { WindDirection = 15, WindSpeed = 10, Temperature = 13, Description = "kdfkdjf", Time = (DateTime.Now.AddDays(1).AddHours(2)), City = "odense" });
+    }
+
+    public async Task GetWeather()
+    {
+        URL = $"https://localhost:7244/{city}";
+        weatherForecasts = await httpClient.GetFromJsonAsync<List<Weather>>(URL);
+    }
+
+    public class Weather
+    {
+        public int WindDirection { get; set; }
+
+        public double WindSpeed { get; set; }
+
+        public double Temperature { get; set; }
+
+        public string Description { get; set; }
+
+        public DateTime Time { get; set; }
+
+        public string City { get; set; }
+    }
+}

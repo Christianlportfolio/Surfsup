@@ -1,0 +1,125 @@
+﻿@model SurfProjekt.Models.ViewModels.BoardHierarchy
+
+@using Microsoft.AspNetCore.Authorization
+@inject IAuthorizationService AuthorizationService
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Oversigt</h1>
+@if ((await AuthorizationService.AuthorizeAsync(User, ConstantsRole.Roles.Admin)).Succeeded)
+{
+    <p>
+        <a asp-action="Create">Opret ny</a>
+    </p>   
+}
+
+<form asp-controller="Boards" asp-action="Index" method="get">
+    <p>
+        Navn: <input type="text" name="SearchString" />
+        <input type="submit" value="Søg" />
+        <a asp-action="Index">Vis alle</a>
+    </p>
+</form>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Board.Image)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Board.Name)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Board.Length)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Board.Width)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Board.Thickness)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Board.Volume)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Board.Type)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Board.Price)
+            </th>
+@*            <th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().Board.Equipment)
+            </th>*@
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Boards) {
+        <tr>
+            <td>
+               <img src="@item.Image" width="100px" height="100px" alt="Billede ikke fundet" >
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Length)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Width)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Thickness)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Volume)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Type)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Price)
+            </td>
+           @* <td>
+                @Html.DisplayFor(modelItem => item.Equipment)
+            </td>*@
+                @if ((await AuthorizationService.AuthorizeAsync(User, ConstantsRole.Roles.Admin)).Succeeded){
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Rediger</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Detaljer</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Slet</a>
+                </td>
+
+            }
+            else
+            {
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id">Detaljer</a> |
+                    <a asp-action="Rent" asp-route-id="@item.Id">Udlej</a>
+                </td>                   
+            }
+        </tr>
+}
+    </tbody>
+</table>
+
+@{
+    var prevDisabled = !Model.Boards.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.Boards.HasNextPage ? "disabled" : "";
+}
+
+<a asp-action="Index"
+   asp-route-pageNumber="@(Model.Boards.PageIndex - 1)"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   class="btn btn-default @prevDisabled">
+    Previous
+</a>
+<a asp-action="Index"
+   asp-route-pageNumber="@(Model.Boards.PageIndex + 1)"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   class="btn btn-default @nextDisabled">
+    Next
+</a>

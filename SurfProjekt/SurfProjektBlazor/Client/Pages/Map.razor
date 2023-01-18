@@ -1,0 +1,73 @@
+﻿@page "/map"
+@using GoogleMaps.LocationServices
+@using GoogleMapsComponents
+@using GoogleMapsComponents.Maps
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+
+<h1>Kortoversigt</h1>
+@*<input class="text" @bind=city placeholder="Din by f.eks. 'Odense'..." />
+<button class="btn btn-primary" @onclick="ShowMap">Vis by</button>*@
+<div style="height:500px">
+    <GoogleMap @ref="@map1" Id="map1" Options="@mapOptions" Height="100%"></GoogleMap>
+</div>
+
+@code {
+    private GoogleMap map1;
+    private MapOptions mapOptions;
+
+    private string city;
+    private List<MapDTO>? mapDTOs;
+
+    private double lat;
+    private double lng;
+
+    protected override async void OnInitialized()
+    {
+          mapOptions = new MapOptions()
+            {
+                Zoom = 13,
+                Center = new LatLngLiteral()
+                {
+              //foreach (var item in mapDTOs)
+              //    {
+                    Lat = 55.39594,
+                    Lng =10.38831
+                  //}
+    },
+        MapTypeId = MapTypeId.Roadmap
+    };
+
+    }
+
+    public async Task ShowMap()
+    {
+        mapDTOs = await httpClient.GetFromJsonAsync<List<MapDTO>>($"https://localhost:7244/Map/boards/{city}");
+
+        foreach (var item in mapDTOs)
+        {
+            lat = item.lat;
+            lng = item.lng;
+        }
+
+        //mapOptions = new MapOptions()
+        //    {
+        //        Zoom = 13,
+        //        Center = new LatLngLiteral()
+        //        {
+
+        //            Lat = lat,
+        //            Lng = lng
+
+        //        },
+        //        MapTypeId = MapTypeId.Roadmap
+        //    };
+    
+}
+
+    public class MapDTO
+    {
+        public double lat { get; set; }
+        public double lng { get; set; }
+    }
+}

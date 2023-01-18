@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Home page";
+}
+
+<section class="py-5 text-center container">
+    <div class="row py-lg-5">
+        <div class="col-lg-6 col-md-8 mx-auto">
+            <h1 class="fw-light">Velkommen til Surf's Up</h1>
+            <p class="lead text-muted">Her kan du leje dit surfboard. Vi leverer til hele landet.</p>
+            <p>
+                <a class="btn btn-primary my-2" asp-area="" asp-controller="Boards" asp-action="Index">Boards</a>
+                <a class="btn btn-primary my-2" id="register" asp-area="Identity" asp-page="/Account/Register">Registrer</a>
+                <a class="btn btn-primary my-2 id="login" asp-area="Identity" asp-page="/Account/Login">Login</a>
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Gallery -->
+<div class="row">
+    <div class="col-lg-4 col-md-12 mb-4 mb-lg-0">
+        <img src="https://cdn.shopify.com/s/files/1/1646/9407/products/GoFish_White_1500px_900x.jpg?v=1627427041"
+             class="w-100 shadow-1-strong rounded mb-4"
+             alt="Boat on Calm Water" />
+
+        <img src="https://cdn.shopify.com/s/files/1/2468/2881/products/1_79af50c3-607a-4805-ae86-360ad1c65577_2000x2000.png?v=1649788987"
+             class="w-100 shadow-1-strong rounded mb-4"
+             alt="Wintry Mountain Landscape" />
+    </div>
+
+    <div class="col-lg-4 mb-4 mb-lg-0">
+        <img src="https://www.ospreyactionsports.co.uk/media/catalog/product/cache/da421aa4609f0c2165cda2879fbba662/b/g/bgg1400_osprey_9ft_lboard_108_blue_all-copy.jpg"
+             class="w-100 shadow-1-strong rounded mb-4"
+             alt="Mountains in the Clouds" />
+
+        <img src="https://cdn.shopify.com/s/files/1/0103/0448/7482/products/stsurfdaily20u-343___daily-76-soft-top-surfboard-with-removable-fins-mint-white___default_1000x.jpg?v=1600730940"
+             class="w-100 shadow-1-strong rounded mb-4"
+             alt="Boat on Calm Water" />
+    </div>
+
+    <div class="col-lg-4 mb-4 mb-lg-0">
+        <img src="https://cdn.shopify.com/s/files/1/1646/9407/products/GoFish_Red_1500px_900x.jpg?v=1627427041"
+             class="w-100 shadow-1-strong rounded mb-4"
+             alt="Waves at Sea" />
+
+        <img src="https://www.lib-tech.com/media/catalog/product/cache/94ceb2dd2867269381b5b9da0712e7a4/2/0/2022-lost-x-LIB-Tech-Quiver-Killer-5-6-surfboard.jpg"
+             class="w-100 shadow-1-strong rounded mb-4"
+             alt="Yosemite National Park" />
+    </div>
+</div>
+<!-- Gallery -->

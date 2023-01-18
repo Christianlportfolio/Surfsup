@@ -1,0 +1,222 @@
+﻿@page "/BoardsList"
+@using Microsoft.AspNetCore.Authorization
+@using SurfProjektBlazor.Shared
+@using Microsoft.AspNetCore.Identity
+@inject IAuthorizationService AuthorizationService
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IModalService modal
+
+<h3>Surf Boards</h3>
+ 
+
+@if (boards == null)
+{
+    <p><em>Loading...</em></p>
+}
+
+
+else
+{
+    <AuthorizeView Roles="Admin,Udlejer">
+        <p>
+            <button @onclick="Create" class="btn btn-primary">Opret ny</button>
+        </p>
+        <p>Hej @userName! Du kan redigere/slette dine surfbrætter nedenunder</p>
+    </AuthorizeView>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>
+                Image
+            </th>
+            <th>
+                Name
+            </th>
+            <th>
+                Length
+            </th>
+            <th>
+                Width
+            </th>
+            <th>
+                Thickness
+            </th>
+            <th>
+                Volume
+            </th>
+            <th>
+                Type
+            </th>
+            <th>
+                Price
+            </th>
+            @*<th>
+            @Html.DisplayNameFor(model => model.FirstOrDefault().Board.Equipment)
+            </th>*@
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+          @foreach (var item in ownBoards ?? Enumerable.Empty<Boards>())
+        {
+            <tr style="background-color:gainsboro">
+                <td>
+                    <img src="@item.Image" width="100px" height="100px" alt="Billede ikke fundet">
+                </td>
+                <td>
+                    @item.Name                   
+                </td>
+                <td>
+                    @item.Length
+                </td>
+                <td>
+                    @item.Width
+                </td>
+                <td>
+                    @item.Thickness
+                </td>
+                <td>
+                    @item.Volume
+                </td>
+                <td>
+                    @item.Type
+                </td>
+                <td>
+                    @item.Price
+                </td>
+                @* <td>
+            @Html.DisplayFor(modelItem => item.Equipment)
+            </td>*@
+                <td>
+
+           
+                    <button class="btn btn-success" @onclick="() => Details(item.Id)">Detaljer</button>
+
+                </td>
+                    <AuthorizeView Roles="Admin,Udlejer">
+                            <td>
+                                |<button class="btn btn-success" @onclick="() => Edit(item.Id)">Rediger</button>|
+                                <button class="btn btn-danger" @onclick="() => Delete(item.Id)">Slet</button>
+                            </td>
+                    </AuthorizeView>  
+                </tr>
+        }
+        @foreach (var item in boards)
+        {
+            <tr>
+                <td>
+                    <img src="@item.Image" width="100px" height="100px" alt="Billede ikke fundet">
+                </td>
+                <td>
+                    @item.Name                   
+                </td>
+                <td>
+                    @item.Length
+                </td>
+                <td>
+                    @item.Width
+                </td>
+                <td>
+                    @item.Thickness
+                </td>
+                <td>
+                    @item.Volume
+                </td>
+                <td>
+                    @item.Type
+                </td>
+                <td>
+                    @item.Price
+                </td>
+                @* <td>
+            @Html.DisplayFor(modelItem => item.Equipment)
+            </td>*@
+                <td>
+
+                    <button class="btn btn-primary" @onclick="() => Rent(item.Id)">Udlej</button>|
+                    <button class="btn btn-primary" @onclick="() => Details(item.Id)">Detaljer</button>
+                </td>
+                    <AuthorizeView Roles="Admin">
+                            <td>
+                                |<button class="btn btn-primary" @onclick="() => Edit(item.Id)">Rediger</button>|
+                                <button class="btn btn-primary" @onclick="() => Delete(item.Id)">Slet</button>
+                            </td>
+                    </AuthorizeView>
+
+                    
+                </tr>
+        }
+    </tbody>
+</table>
+}
+
+
+
+@code {
+    private List<Boards>? ownBoards = null;
+    private List<Boards>? boards;
+    private string URL = "";
+
+    private string userName;
+
+    private List<string> currentUserRoles = new List<string>();
+
+    protected async override Task OnInitializedAsync()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authenticationState.User;
+        userName = user.Identity.Name;
+
+        //bool authenticated = false;
+        //bool authenticated = await httpClient.GetFromJsonAsync<bool>("https://localhost:7278/api/User");
+        if (await isAuthenticated())
+        {
+
+            URL = "https://localhost:7244/api/Boards?api-version=2.0";
+            ownBoards = await httpClient.GetFromJsonAsync<List<Boards>>("api/boards/getboards");
+        }
+        else{
+            URL = "https://localhost:7244/api/Boards?api-version=1.0";
+        }
+
+        boards = await httpClient.GetFromJsonAsync<List<Boards>>(URL);
+    }
+
+    private async Task Rent(int ID){
+        var IdParamter = new ModalParameters();
+        IdParamter.Add(nameof(RentComponent.ID),ID);
+        modal.Show<RentComponent>("", IdParamter);
+    }
+
+    private void Create(){
+        navigationManager.NavigateTo("/CreateBoard");
+    }
+
+    private void Details(int ID){
+        navigationManager.NavigateTo($"/details/{ID}");
+    }
+
+
+    private void Edit(int ID)
+
+    {
+        navigationManager.NavigateTo($"/UpdateBoard/{ID}");
+    }
+
+    private async Task Delete(int ID)
+    {
+        navigationManager.NavigateTo($"/DeleteBoard/{ID}");
+    }
+
+    private async Task<bool> isAuthenticated(){
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return authenticationState.User.Identity.IsAuthenticated;
+    }
+
+    private async Task Roles(){
+        currentUserRoles = await httpClient.GetFromJsonAsync<List<string>>("api/GetUserRoles");
+    }
+
+}

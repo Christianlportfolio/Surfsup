@@ -1,0 +1,143 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using SurfProjektBlazor.Shared
+@inject HttpClient httpClient
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+<h3>Udlejning</h3>
+
+@if(board != null){
+    <div>
+    <hr />
+      <img src="@board.Image" width="100px" height="100px" alt="Billede ikke fundet">
+        <dl class="row">   
+            <dt class="col-sm-2">
+                Name
+            </dt>
+            <dd class="col-sm-10">
+                @board.Name
+            </dd>
+            <dt class="col-sm-2">
+               Length
+            </dt>
+            <dd class="col-sm-10">
+                @board.Length
+            </dd>
+            <dt class="col-sm-2">
+                Width
+            </dt>
+            <dd class="col-sm-10">
+                @board.Width
+            </dd>
+            <dt class="col-sm-2">
+                Thickness
+            </dt>
+            <dd class="col-sm-10">
+                @board.Thickness
+            </dd>
+            <dt class="col-sm-2">
+               Volume
+            </dt>
+            <dd class="col-sm-10">
+                @board.Volume
+            </dd>
+            <dt class="col-sm-2">
+                Type
+            </dt>
+            <dd class="col-sm-10">
+                @board.Type
+            </dd>
+            <dt class="col-sm-2">
+                Price
+            </dt>
+            <dd class="col-sm-10">
+                @board.Price
+            </dd>
+              <dt class="col-sm-2">
+                Oprettet af
+            </dt>
+            <dd class="col-sm-10">
+                @foreach (var item in userName)
+                {
+                    @item.UserName
+                }             
+            </dd>
+            <dt class="col-sm-2">
+                Antal timer
+            </dt>
+            <dd class="col-sm-10">
+                <input @bind-value="lease.TimeFrame" class="form-control">
+            </dd>
+
+            <dt class="col-sm-2">
+                <button @onclick="Rent" class="btn btn-danger">Udlej</button>
+            </dt>
+            @*<dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Equipment)
+            </dt>
+            <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Equipment)
+            </dd>*@
+        </dl>
+    </div>
+}
+else{
+    <div>Boardet blev ikke fundet</div>
+}
+
+@code {
+    [Parameter]
+    public int ID { get; set; }
+
+    private Boards? board;
+    string URL = "";
+
+    private List<IdentityUser>? userName; 
+    Lease lease = new Lease();
+
+    protected async override Task OnInitializedAsync()
+    {
+        ID = ID;
+        URL = $"https://localhost:7244/api/Boards/{ID}?api-version=2.0";
+        board = await httpClient.GetFromJsonAsync<Boards>(URL);
+        userName = await httpClient.GetFromJsonAsync<List<IdentityUser>>($"https://localhost:7244/api/Boards/GetUser/{board.ApplicationUserId}?api-version=1.0");
+    }
+
+    public async Task Rent()
+    {
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authenticationState.User;
+        HttpResponseMessage response;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            lease.BoardID = ID;
+            lease.UserID = user.FindFirst(u => u.Type.Contains("sub"))?.Value;
+            lease.Date = DateTime.Now;
+
+            response = await httpClient.PostAsJsonAsync<Lease>($"https://localhost:7244/api/Boards/rent?api-version=2.0", lease);
+
+            if (response.IsSuccessStatusCode)
+            {
+                navigationManager.NavigateTo("/BoardsList");
+            }
+
+        }
+        else
+        {
+            lease.BoardID = ID;
+            lease.UserID = null;
+            lease.Date = DateTime.Now;
+
+            response = await httpClient.PostAsJsonAsync<Lease>($"https://localhost:7244/api/Boards/rent?api-version=1.0", lease);
+
+            if (response.IsSuccessStatusCode)
+            {
+                navigationManager.NavigateTo("/BoardsList");
+            }
+        }
+
+      
+       
+    }
+
+}

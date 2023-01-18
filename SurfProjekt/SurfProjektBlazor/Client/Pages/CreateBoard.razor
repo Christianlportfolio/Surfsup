@@ -1,0 +1,118 @@
+﻿@page "/CreateBoard"
+@using SurfProjektBlazor.Shared
+@inject HttpClient Http
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ILocalStorageService localStorage
+<h1>Opret ny</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm class="container" Model="SelectedBoard" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label >navn</label>
+                <input @bind-value="SelectedBoard.Name" class="form-control" @onfocusout="StateManagement" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Længde</label>
+                <input @bind-value="SelectedBoard.Length" class="form-control" @onfocusout="StateManagement" />
+                <span asp-validation-for="Length" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Bredde</label>
+                <input @bind-value="SelectedBoard.Width" class="form-control" @onfocusout="StateManagement" />
+                <span asp-validation-for="Width" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Tykkelse</label>
+                <input @bind-value="SelectedBoard.Thickness" class="form-control" @onfocusout="StateManagement" />
+                <span asp-validation-for="Thickness" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Volumen</label>
+                <input @bind-value="SelectedBoard.Volume" class="form-control" @onfocusout="StateManagement" />
+                <span asp-validation-for="Volume" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Type</label>
+                <input @bind-value="SelectedBoard.Type" class="form-control" @onfocusout="StateManagement" />
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Pris</label>
+                <input @bind-value="SelectedBoard.Price" class="form-control" @onfocusout="StateManagement" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+@*            <div class="form-group">
+                <label asp-for="Equipment" class="control-label"></label>
+                <input asp-for="Equipment" class="form-control" />
+                <span asp-validation-for="Equipment" class="text-danger"></span>
+            </div>*@
+            <div class="form-group">
+                <label>Billede-url</label>
+                <input @bind-value="SelectedBoard.Image" class="form-control" @onfocusout="StateManagement"/>
+                <span asp-validation-for="Image" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Opret</button>              
+            </div>
+        </EditForm>
+        <div>
+            <a @onclick="BackToList" class="btn-link">Tilbage til oversigt</a>
+        </div>
+    </div>
+</div>
+
+
+
+
+@code {
+    private Boards? SelectedBoard = new Boards();
+
+    protected override async Task OnInitializedAsync()
+    {
+        //gets the saved inputs from localstorage when refreshing page 
+        SelectedBoard = await localStorage.GetItemAsync<Boards>("board");
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        //if((await Http.GetFromJsonAsync<string>("api/role")).ToLower() == "udlejer"){
+        //    SelectedBoard.ApplicationUserId = await Http.GetFromJsonAsync<string>("api/userid");
+        //}
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authenticationState.User;
+      
+
+        if (user.Identity.IsAuthenticated)
+        {
+            SelectedBoard.ApplicationUserId = user.FindFirst(u => u.Type.Contains("sub"))?.Value;
+
+            HttpResponseMessage response;
+            response = await Http.PostAsJsonAsync<Boards>("https://localhost:7244/api/Boards/createboard", SelectedBoard);
+
+            if (response.IsSuccessStatusCode)
+            {
+                navigationManager.NavigateTo("/BoardsList");
+            }
+        }
+    }
+
+    //method that saves the users input to localstorage (in browser)
+    private async Task StateManagement()
+    {
+        await localStorage.SetItemAsync("board", SelectedBoard);
+       
+    } 
+
+    private void BackToList()
+    {
+        navigationManager.NavigateTo("/BoardsList");
+    }
+
+}

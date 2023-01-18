@@ -1,0 +1,104 @@
+﻿@page "/UpdateBoard/{ID:int}"
+@using SurfProjektBlazor.Shared
+@inject HttpClient Http
+@inject NavigationManager navigationManager
+
+<h1>Rediger</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm class="container" Model="board" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="form-group">
+                <label >navn</label>
+                <input @bind-value="board.Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Længde</label>
+                <input @bind-value="board.Length" class="form-control" />
+                <span asp-validation-for="Length" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Bredde</label>
+                <input @bind-value="board.Width" class="form-control" />
+                <span asp-validation-for="Width" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Tykkelse</label>
+                <input @bind-value="board.Thickness" class="form-control" />
+                <span asp-validation-for="Thickness" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Volumen</label>
+                <input @bind-value="board.Volume" class="form-control" />
+                <span asp-validation-for="Volume" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Type</label>
+                <input @bind-value="board.Type" class="form-control" />
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label >Pris</label>
+                <input @bind-value="board.Price" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+@*            <div class="form-group">
+                <label asp-for="Equipment" class="control-label"></label>
+                <input asp-for="Equipment" class="form-control" />
+                <span asp-validation-for="Equipment" class="text-danger"></span>
+            </div>*@
+            <div class="form-group">
+                <label>Billede-url</label>
+                <input @bind-value="board.Image" class="form-control" />
+                <span asp-validation-for="Image" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-success">Rediger</button>
+              
+            </div>
+        </EditForm>
+        <div>
+            <a @onclick="BackToList" class="btn-link">Tilbage til oversigt</a>
+        </div>
+    </div>
+</div>
+
+
+
+
+@code {
+
+    [Parameter]
+    public int ID { get; set; }
+    private Boards board { get; set; } = new Boards();
+    string URL = "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        ID = ID;
+        URL = $"https://localhost:7244/api/Boards/{ID}?api-version=2.0";
+        board = await httpClient.GetFromJsonAsync<Boards>(URL);
+    }
+
+    public async Task HandleValidSubmit()
+    {
+        HttpResponseMessage response;
+        response = await Http.PostAsJsonAsync<Boards>($"https://localhost:7244/api/Boards/updateboard/{ID}", board);
+
+        if (response.IsSuccessStatusCode)
+        {
+            navigationManager.NavigateTo("/BoardsList");
+        }
+
+    }
+
+    public void BackToList()
+    {
+        navigationManager.NavigateTo("/BoardsList");
+    }
+}
